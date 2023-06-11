@@ -1,1 +1,1 @@
-# vstu_diplom_procedure
+# vstu_diplom_procedure *
