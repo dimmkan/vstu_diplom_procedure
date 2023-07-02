@@ -1,0 +1,19 @@
+{
+  "name": "vstu_diplom_procedure",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dimmkan/vstu_diplom_procedure.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dimmkan/vstu_diplom_procedure/issues"
+  },
+  "homepage": "https://github.com/dimmkan/vstu_diplom_procedure#readme"
+}
