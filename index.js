@@ -318,6 +318,68 @@ const formatOntPortsXpon = (dataArray) => {
     return result;
 }
 
+const formatInterfaceStatusDataXdsl = (dataObject) => {
+    const result = {};
+
+    for (const key in dataObject) {
+        result[key] = key === 'uptime' ? Number(dataObject[key].replace(',', '.')) : dataObject[key].toUpperCase()
+    }
+
+    return result;
+}
+
+const formatLineStatusDataXdsl = (dataObject) => {
+    const result = {};
+
+    const speedFields = ['atuc_up_tx_rate', 'atuc_down_tx_rate', 'atuc_up_attainable_rate', 'atuc_down_attainable_rate'];
+    const infoFields = ['atuc_operational_mode', 'atuc_adm_operational_mode'];
+
+    for (const key in dataObject) {
+        dataObject[key] = dataObject[key].replace(',', '.');
+        result[key] = !infoFields.includes(key)
+            ? speedFields.includes(key)
+                ? Number((Number(dataObject[key]) / 1000000).toFixed(2)) : Number(dataObject[key]) : dataObject[key].toUpperCase();
+    }
+
+    return result;
+}
+
+const formatPvcXdsl = (dataArray) => {
+    const result = {};
+
+    for (const item of dataArray) {
+        for (const key in item) {
+            item[key] = Number(item[key]) || Number(item[key]) === 0 ? Number(item[key]) : item[key];
+        }
+    }
+
+    for (const item of dataArray) {
+        for (const key in item) {
+            if (result[key]) result[key].push(item[key]);
+            else result[key] = [item[key]];
+        }
+    }
+
+    return result;
+}
+
+const formatModemXdsl = (dataObject) => {
+    const result = {};
+
+    const new_dataObject = dataMapper({ ...dataObject }, {
+        vendorId: "vendor",
+        versionNumber: "version",
+        serialNumber: "serial_number",
+    });
+
+    for (const key in new_dataObject) {
+        if (result[key]) result[key].push(new_dataObject[key].toUpperCase());
+        else result[key] = [new_dataObject[key].toUpperCase()];
+    }
+
+    return result;
+}
+
 // Parameter builders
 function measureParamBuilder(data) {
     if (data.parameters[`${MRF}.customer_dn`]) {
@@ -425,13 +487,27 @@ function xponMeasureHandler(data) {
 function xdslMeasureHandler(data) {
     try {
         const deviceData = deviceDataParser(data.equipment ?? '');
-        const ipAddrData = _.pick(['ip_address', 'rack', 'slot', 'port'], ipAddrDataParser(data.portAddr ?? ''));
-        const xdslData = dataMapper(data.xdslData, xdslMeasureDataKeys, ['pvc', 'modem']);
-        const interfaceStatusData = _.pick(['uptime', 'power_mode', 'profile'], xdslData);
-        const lineStatusData = _.omit(['uptime', 'power_mode', 'profile'], xdslData);
+        const parseIpAddrData = ipAddrDataParser(data.portAddr ?? '');
+        const ipAddrData = {
+            ip_address: parseIpAddrData.ip_address,
+            rack: parseIpAddrData.rack,
+            slot: parseIpAddrData.slot,
+            port: parseIpAddrData.port,
+        };
+        const xdslData = dataMapper({ ...data.xdslData }, xdslMeasureDataKeys, ['pvc', 'modem']);
+        const interfaceStatusData = {
+            uptime: xdslData.uptime,
+            power_mode: xdslData.power_mode,
+            profile: xdslData.profile
+        };
 
-        const speedFields = ['atuc_up_tx_rate', 'atuc_down_tx_rate', 'atuc_up_attainable_rate', 'atuc_down_attainable_rate'];
-        const infoFields = ['atuc_operational_mode', 'atuc_adm_operational_mode'];
+        const lineStatusData = {};
+        const omitFields = ['uptime', 'power_mode', 'profile'];
+        for (const key in xdslData) {
+            if (!omitFields.includes(key)) {
+                lineStatusData[key] = xdslData[key];
+            }
+        }
 
         return {
             tech_data: {
@@ -442,52 +518,14 @@ function xdslMeasureHandler(data) {
             interface_status: {
                 status_adm: data.admStatus.toUpperCase() ?? '',
                 status_oper: data.operStatus.toUpperCase(),
-                ...Object
-                    .entries(interfaceStatusData)
-                    .reduce((acc, [key, value]) => {
-                        acc[key] = key === 'uptime' ? Number(value.replace(',', '.')) : value.toUpperCase();
-                        return acc;
-                    }, {}),
+                ...formatInterfaceStatusDataXdsl(interfaceStatusData),
             },
-            line_status: {
-                ...Object
-                    .entries(lineStatusData)
-                    .reduce((acc, [key, value]) => {
-                        value = value.replace(',', '.');
-                        acc[key] = !infoFields.includes(key)
-                            ? speedFields.includes(key)
-                                ? Number((Number(value) / 1000000).toFixed(2)) : Number(value) : value.toUpperCase();
-                        return acc;
-                    }, {}),
-            },
+            line_status: formatLineStatusDataXdsl(lineStatusData),
             port_mac: {
                 mac_address: data.mac,
             },
-            pvc: data.xdslData.pvc
-                .map((item) => Object
-                    .entries(item)
-                    .reduce((acc, [key, value]) => {
-                        acc[key] = Number(value) || Number(value) === 0 ? Number(value) : value;
-                        return acc;
-                    }, {}))
-                .reduce((acc, item) => {
-                    Object.entries(item).forEach(([key, value]) => {
-                        if (acc[key]) acc[key].push(value);
-                        else acc[key] = [value];
-                    });
-                    return acc;
-                }, {}),
-            modem: Object
-                .entries(dataMapper(data.xdslData.modem, {
-                    vendorId: "vendor",
-                    versionNumber: "version",
-                    serialNumber: "serial_number",
-                }))
-                .reduce((acc, [key, value]) => {
-                    if (acc[key]) acc[key].push(value.toUpperCase());
-                    else acc[key] = [value.toUpperCase()];
-                    return acc;
-                }, {}),
+            pvc: formatPvcXdsl(data.xdslData.pvc),
+            modem: formatModemXdsl(data.xdslData.modem),
         };
     } catch (error) {
         throw { message: error.message, code: ERROR_PROVIDER_RESPONSE_DECODE, description: 'Ошибка при разборе ответа системы-провайдера' };
@@ -544,6 +582,7 @@ const handleMessage = async (data) => {
         const result = await fetch.sendPost(taskInfo.methodGetter(data), params);
         checkResult(result);
         response.message.data = taskInfo.handler(result.message);
+        response.message.action = data.task;
     } catch (error) {
         console.log(error);
         utils.error('[Handler] Error:', error.message);
