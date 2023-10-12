@@ -121,19 +121,15 @@ const deviceDataParser = (equipment) => {
 
 const ipAddrDataParser = (ipAddrString) => {
     const ip_addr_array = ipAddrString.split(/:\-|:\*/g);
-
     const portAndOntDataArray = ip_addr_array[1].split(' ');
     const portString = portAndOntDataArray[0];
-
     const portDataArray_tmp = portString.split('/');
     const portDataArray = [];
-
     for (let i = 0; i < portDataArray_tmp.length; i++) {
         if (!!portDataArray_tmp[i]) {
             portDataArray.push(portDataArray_tmp[i])
         }
     }
-
     const result = {
         ip_address: ip_addr_array[0] || '',
         rack: null,
@@ -141,7 +137,6 @@ const ipAddrDataParser = (ipAddrString) => {
         port: null,
         ont_id: null,
     }
-
     if (portDataArray.length === 1) {
         result.port = parseInt(portDataArray[0]) || null;
     };
@@ -155,7 +150,6 @@ const ipAddrDataParser = (ipAddrString) => {
         result.port = parseInt(portDataArray[2]) || null;
     };
     result.ont_id = portAndOntDataArray.length === 3 ? parseInt(portAndOntDataArray[2]) || null : '';
-
     return result;
 };
 
@@ -177,13 +171,11 @@ const paramDataMapper = (dataObject, mappingKeys, omitFieldsArray = []) => {
         delete dataObject[field];
     }
     const result = {};
-
     for (const key in dataObject) {
         if (!dataObject[key]) {
             delete dataObject[key];
         }
     }
-
     for (const key in dataObject) {
         if (mappingKeys[key]) {
             result[mappingKeys[key]] = dataObject[key];
