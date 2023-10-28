@@ -8,7 +8,7 @@ const { dn_validator,
     dn_action_validator,
 } = require('./common/validate');
 
-const redisChannelSrc = 'adapter';
+const redisChannelSrc = 'adapter-procedure';
 const redisChannelDst = 'transmitter';
 
 const fttxMeasureTask = 'equipment.measure.fttx';
