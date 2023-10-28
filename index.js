@@ -187,7 +187,9 @@ const paramDataMapper = (dataObject, mappingKeys, omitFieldsArray = []) => {
 const formatInterfaceStatusDataFttx = (dataObject) => {
     const result = {};
     for (const key in dataObject) {
-        result[key] = Number(dataObject[key]) || Number(dataObject[key]) === 0 ? key === 'speed' ? Number((Number(dataObject[key]) / 1000000).toFixed(2)) : Number(dataObject[key]) : dataObject[key].toUpperCase();
+        result[key] = Number(dataObject[key]) || Number(dataObject[key]) === 0 ? key === 'speed' 
+        ? Number((Number(dataObject[key]) / 1000000).toFixed(2)) 
+        : Number(dataObject[key]) : dataObject[key].toUpperCase();
     }
     return result;
 }
