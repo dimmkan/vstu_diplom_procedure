@@ -11,9 +11,9 @@ const { dn_validator,
 const redisChannelSrc = 'adapter-procedure';
 const redisChannelDst = 'transmitter';
 
-const fttxMeasureTask = 'equipment.measure.fttx';
-const xponMeasureTask = 'equipment.measure.xpon';
-const xdslMeasureTask = 'equipment.measure.xdsl';
+const fttxMeasureTask = 'equipment.measure.fttx.proc';
+const xponMeasureTask = 'equipment.measure.xpon.proc';
+const xdslMeasureTask = 'equipment.measure.xdsl.proc';
 
 const TASKS_INFO = {
     [fttxMeasureTask]: {
