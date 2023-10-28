@@ -232,8 +232,8 @@ const formatVlansFttx = (dataObject) => {
     }
 
     for (const item of dataObject) {
-        acc.vlan_upper.push(Number(item.svlan) || Number(item.svlan) === 0 ? Number(item.svlan) : item.svlan.toUpperCase());
-        acc.vlan_lower.push(Number(item.vlan) || Number(item.vlan) === 0 ? Number(item.vlan) : item.vlan.toUpperCase());
+        result.vlan_upper.push(Number(item.svlan) || Number(item.svlan) === 0 ? Number(item.svlan) : item.svlan.toUpperCase());
+        result.vlan_lower.push(Number(item.vlan) || Number(item.vlan) === 0 ? Number(item.vlan) : item.vlan.toUpperCase());
     }
 
     return result;
